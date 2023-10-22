@@ -1,0 +1,28 @@
+[package]
+name = "macroex"
+authors = ["Mincong Lu <mintlux667@gmail.com>"]
+license = "MIT OR Apache-2.0"
+
+readme = "README.md"
+repository = "https://github.com/mintlu8/macroex"
+description = """
+An extractor based low level macro parsing crate
+that provides high level parsing support through derive macros.
+"""
+keywords = ["macros", "deserialize"]
+version = "0.1.0"
+edition = "2021"
+
+
+[features]
+default = ["derive"]
+derive = ["macroex-derive"]
+
+[dependencies]
+litrs = "^0.4"
+proc-macro2 = "^1"
+thiserror = "^1"
+macroex-derive = { path = "../derive", optional = true }
+
+[dev-dependencies]
+quote = "^1"

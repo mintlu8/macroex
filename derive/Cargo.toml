@@ -1,0 +1,23 @@
+[package]
+name = "macroex-derive"
+authors = ["Mincong Lu <mintlux667@gmail.com>"]
+license = "MIT OR Apache-2.0"
+
+readme = "README.md"
+repository = "https://github.com/mintlu8/macroex"
+description = """
+Derive macros for the macroex crate.
+"""
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro=true
+
+[dependencies]
+convert_case = "^0.6"
+proc-macro-error = { version = "^1", default-features = false }
+proc-macro2 = "^1"
+litrs = "^0.4"
+quote = "^1"
+syn = "^2"
