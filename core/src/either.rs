@@ -6,6 +6,7 @@ use crate::{FromMacro, abort, Error};
 /// Matches one of two [`FromMacro`] implementors sequentially.
 /// 
 /// Note the input will be cloned for each branch, which might not be optimal.
+#[derive(Debug)]
 pub enum Either<A: FromMacro, B: FromMacro>{
     A(A),
     B(B),
@@ -38,6 +39,7 @@ pub type EitherStream = OneOrMany<TokenTree, TokenStream>;
 /// Matches one of three [`FromMacro`] implementors sequentially.
 /// 
 /// Note the input will be cloned for each branch, which might not be optimal.
+#[derive(Debug)]
 pub enum Either3<A: FromMacro, B: FromMacro, C: FromMacro>{
     A(A),
     B(B),
@@ -47,6 +49,7 @@ pub enum Either3<A: FromMacro, B: FromMacro, C: FromMacro>{
 /// Matches one of four [`FromMacro`] implementors sequentially.
 /// 
 /// Note the input will be cloned for each branch, which might not be optimal.
+#[derive(Debug)]
 pub enum Either4<A: FromMacro, B: FromMacro, C: FromMacro, D: FromMacro>{
     A(A),
     B(B),
@@ -80,3 +83,22 @@ impl<$($fields),*> FromMacro for $name<$($fields),*> where $($fields: FromMacro)
 impl_choice!(Either {A, B});
 impl_choice!(Either3 {A, B, C});
 impl_choice!(Either4 {A, B, C, D});
+
+
+impl<A: FromMacro, B: FromMacro> Default for Either<A, B> where A: Default{
+    fn default() -> Self {
+        Self::A(A::default())
+    }
+}
+
+impl<A: FromMacro, B: FromMacro, C: FromMacro> Default for Either3<A, B, C> where A: Default{
+    fn default() -> Self {
+        Self::A(A::default())
+    }
+}
+
+impl<A: FromMacro, B: FromMacro, C: FromMacro, D: FromMacro> Default for Either4<A, B, C, D> where A: Default{
+    fn default() -> Self {
+        Self::A(A::default())
+    }
+}

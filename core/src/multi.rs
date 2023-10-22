@@ -15,6 +15,7 @@ use crate::{Extractor, FromMacro, Iter, Parenthesisized, StreamExtract, CommaExt
 /// assert_eq!(c, '3');
 /// # Ok(())}
 /// ```
+#[derive(Debug)]
 pub struct MultiExtractor<T>(pub T);
 
 macro_rules! multi_extract_tuple {
