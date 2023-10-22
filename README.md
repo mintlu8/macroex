@@ -1,5 +1,8 @@
 # macroex
 
+[![Crates.io](https://img.shields.io/crates/v/macroex.svg)](https://crates.io/crates/macroex)
+[![Docs](https://docs.rs/macroex/badge.svg)](https://docs.rs/macroex/latest/macroex/)
+
 An extractor based low level macro parsing crate
 that provides high level parsing support through derive macros.
 
