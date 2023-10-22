@@ -22,7 +22,7 @@ derive = ["macroex-derive"]
 litrs = "^0.4"
 proc-macro2 = "^1"
 thiserror = "^1"
-macroex-derive = { path = "../derive", optional = true }
+macroex-derive = { path = "../derive", version = "^0.1", optional = true }
 
 [dev-dependencies]
 quote = "^1"
