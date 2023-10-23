@@ -200,7 +200,7 @@ pub fn from_tuple(fields: FieldsUnnamed) -> Vec<TokenStream> {
     result_fields
 }
 
-pub fn format_struct(name: Ident, string_name: String, generics: Generics, fields: Vec<TokenStream>) -> TokenStream{
+pub fn format_struct(name: Ident, string_name: String, generics: &Generics, fields: Vec<TokenStream>) -> TokenStream{
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote! {
 #[automatically_derived]
@@ -225,7 +225,23 @@ const _: () = {
     }
 }
 
-pub fn format_tuple_struct(name: Ident, string_name: String, generics: Generics, fields: Vec<TokenStream>) -> TokenStream{
+pub fn format_idents(name: Ident,  generics: &Generics, idents: Vec<String>) -> TokenStream{
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    quote! {
+        #[automatically_derived]
+        const _: () = {
+            use ::macroex::proc_macro2::{Ident, Span};
+            impl #impl_generics #name #ty_generics #where_clause {
+                pub const IDENTS: &'static [&'static str] = &[#(#idents,)*];
+                pub fn idents() -> Vec<Ident> {
+                    Self::IDENTS.into_iter().map(|x| Ident::new(x, Span::call_site())).collect()
+                }
+            }
+        };
+            }
+}
+
+pub fn format_tuple_struct(name: Ident, string_name: String, generics: &Generics, fields: Vec<TokenStream>) -> TokenStream{
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote!{
 #[automatically_derived]
@@ -250,7 +266,7 @@ const _: () = {
     }.into()
 }
 
-pub fn format_unit(name: Ident, string_name: String, generics: Generics) -> TokenStream{
+pub fn format_unit(name: Ident, string_name: String, generics: &Generics) -> TokenStream{
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote!{
 #[automatically_derived]
@@ -272,7 +288,7 @@ const _: () = {
     }.into()
 }
 
-pub fn from_enum(enum_ident: Ident, generics: Generics, attrs: Vec<Attribute>, data: DataEnum) -> TokenStream {
+pub fn from_enum(enum_ident: Ident, generics: &Generics, attrs: Vec<Attribute>, data: DataEnum) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let mut _name = String::new();
     let mut variant_rename: fn(String) -> String = |s| s;
@@ -383,8 +399,11 @@ pub fn from_macro(tokens: TokenStream) -> TokenStream {
                     for attr in attr_extract(&ast.attrs) {
                         parse_main_attr(attr, &mut string_name, &mut rename);
                     };
+                    let field_idents = fields.named.iter().map(|x|x.ident.as_ref().unwrap().to_string()).collect();
                     let fields = from_struct(fields, rename);
-                    format_struct(name, string_name, ast.generics, fields)
+                    let a = format_struct(name.clone(), string_name, &ast.generics, fields);
+                    let b = format_idents(name, &ast.generics, field_idents);
+                    quote!(#a #b)
                 }
                 syn::Fields::Unnamed(fields) => {
                     let mut string_name = name.to_string();
@@ -393,7 +412,7 @@ pub fn from_macro(tokens: TokenStream) -> TokenStream {
                         parse_main_attr(attr, &mut string_name, &mut rename);
                     };
                     let fields = from_tuple(fields);
-                    format_tuple_struct(name, string_name, ast.generics, fields)
+                    format_tuple_struct(name, string_name, &ast.generics, fields)
                 }
                 syn::Fields::Unit => {
                     let mut string_name = name.to_string();
@@ -401,10 +420,10 @@ pub fn from_macro(tokens: TokenStream) -> TokenStream {
                     for attr in attr_extract(&ast.attrs) {
                         parse_main_attr(attr, &mut string_name, &mut rename);
                     };
-                    format_unit(name, string_name, ast.generics)
+                    format_unit(name, string_name, &ast.generics)
                 },
             }
         }
-        syn::Data::Enum(e) => from_enum(name, ast.generics, ast.attrs, e),
+        syn::Data::Enum(e) => from_enum(name, &ast.generics, ast.attrs, e),
     }
 }

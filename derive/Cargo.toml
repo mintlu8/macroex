@@ -8,7 +8,7 @@ repository = "https://github.com/mintlu8/macroex"
 description = """
 Derive macros for the macroex crate.
 """
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [lib]
