@@ -140,9 +140,10 @@ pub fn attr_extract<'t> (attrs: &'t [Attribute]) -> impl IntoIterator<Item = Tok
     })
 }
 
-pub fn from_struct(fields: FieldsNamed, global_rename: fn(String) -> String) -> Vec<TokenStream> {
+pub fn from_struct(fields: FieldsNamed, global_rename: fn(String) -> String) -> (Vec<TokenStream>, Vec<String>) {
     let mut result_fields = Vec::new();
-        
+    let mut idents = Vec::new();
+
     for field in fields.named {
         let ident = field.ident.unwrap();
         let ty = field.ty;
@@ -157,6 +158,8 @@ pub fn from_struct(fields: FieldsNamed, global_rename: fn(String) -> String) -> 
         let name = rename.unwrap_or_else(|
             |global_rename(ident.to_string())
         );
+
+        idents.push(name.clone());
 
         let field_row = if repeat {
             quote!(
@@ -182,7 +185,7 @@ pub fn from_struct(fields: FieldsNamed, global_rename: fn(String) -> String) -> 
         };
         result_fields.push(field_row);
     }
-    result_fields
+    (result_fields, idents)
 }
 
 pub fn from_tuple(fields: FieldsUnnamed) -> Vec<TokenStream> {
@@ -238,7 +241,7 @@ pub fn format_idents(name: Ident,  generics: &Generics, idents: Vec<String>) -> 
                 }
             }
         };
-            }
+    }
 }
 
 pub fn format_tuple_struct(name: Ident, string_name: String, generics: &Generics, fields: Vec<TokenStream>) -> TokenStream{
@@ -310,7 +313,7 @@ pub fn from_enum(enum_ident: Ident, generics: &Generics, attrs: Vec<Attribute>, 
         };
         match variant.fields {
             syn::Fields::Named(named) => {
-                let arms = from_struct(named, rename);
+                let (arms, _) = from_struct(named, rename);
                 struct_branches.push(quote!(
                     #string_name => Ok(#enum_ident::#ident {
                         #(#arms),*
@@ -399,10 +402,9 @@ pub fn from_macro(tokens: TokenStream) -> TokenStream {
                     for attr in attr_extract(&ast.attrs) {
                         parse_main_attr(attr, &mut string_name, &mut rename);
                     };
-                    let field_idents = fields.named.iter().map(|x|x.ident.as_ref().unwrap().to_string()).collect();
-                    let fields = from_struct(fields, rename);
+                    let (fields, idents) = from_struct(fields, rename);
                     let a = format_struct(name.clone(), string_name, &ast.generics, fields);
-                    let b = format_idents(name, &ast.generics, field_idents);
+                    let b = format_idents(name, &ast.generics, idents);
                     quote!(#a #b)
                 }
                 syn::Fields::Unnamed(fields) => {
