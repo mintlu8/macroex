@@ -289,6 +289,8 @@ mod totokens;
 #[cfg(feature="quote")]
 pub use totokens::*;
 #[cfg(feature="quote")]
+mod transparent_tokens;
+#[cfg(feature="quote")]
 pub use quote;
 
 /// Re-export of [`proc_macro2`]

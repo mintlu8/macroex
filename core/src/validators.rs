@@ -135,7 +135,7 @@ pub struct LitSome;
 /// ```
 pub struct LitNone;
 
-/// Unit struct validator for [`()`].
+/// Unit struct validator for `()`.
 /// 
 /// # Example
 /// ```

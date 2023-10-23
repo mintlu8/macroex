@@ -7,19 +7,6 @@ use quote::{ToTokens, quote};
 
 use crate::*;
 
-impl<T> quote::ToTokens for Number<T> where T: ToTokens{
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        self.0.to_tokens(tokens)
-    }
-}
-
-impl<T: Clone, const N: usize> quote::ToTokens for Repeat<T, N> where T: IntoIterator, <T as IntoIterator>::Item: ToTokens {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let items = self.0.clone().into_iter();
-        tokens.extend(quote!(#(#items),*))
-    }
-}
-
 impl quote::ToTokens for Byte {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         Literal::u8_unsuffixed(self.0).to_tokens(tokens)
@@ -28,12 +15,6 @@ impl quote::ToTokens for Byte {
 impl quote::ToTokens for Bytes {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         Literal::byte_string(self.0.as_slice()).to_tokens(tokens)
-    }
-}
-
-impl quote::ToTokens for IdentString {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        self.0.to_tokens(tokens)
     }
 }
 
@@ -96,9 +77,9 @@ pub fn format_comstructor<T: ToTokens>(format_str: &str, fields: &[&str], array:
     }
 }
 
-/// Converts an array into an array in `quote!`.
+/// Converts an array into an [array, ..] in `quote!`.
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
-struct ArraySyntax<T>( pub T);
+struct ArraySyntax<T>(pub T);
 
 impl<T: IntoIterator + Clone> quote::ToTokens for ArraySyntax<T> where T::Item: ToTokens{
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
@@ -116,7 +97,8 @@ impl<T: IntoIterator + Clone> quote::ToTokens for ArraySyntax<T> where T::Item: 
 /// into a function call.
 #[macro_export]
 macro_rules! call_syntax {
-    ($fmt: literal, $vis: vis $name: ident ($vis2: vis $ty: ty) ) => {
+    ($fmt: literal, $(#[$($attr: tt)*])* $vis: vis $name: ident ($vis2: vis $ty: ty) ) => {
+        $(#[$($attr)*])* 
         $vis struct $name($vis2 $ty);
 
         const _: () = {
@@ -148,7 +130,8 @@ macro_rules! call_syntax {
 /// into a constructor.
 #[macro_export]
 macro_rules! construct_syntax {
-    ($fmt: literal, $vis: vis $name: ident ($vis2: vis $ty: ty) => {$($field: ident),* $(,)?}) => {
+    ($fmt: literal, $(#[$($attr: tt)*])* $vis: vis $name: ident ($vis2: vis $ty: ty) => {$($field: ident),* $(,)?}) => {
+        $(#[$($attr)*])* 
         $vis struct $name($vis2 $ty);
 
         const _: () = {

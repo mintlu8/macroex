@@ -25,11 +25,11 @@ impl<T> FromMacro for Spanned<T> where T: FromMacro{
 }
 
 /// Extacts a [`Group`] enclosed in parenthesis `()`.
-pub struct ParenthesisizedGroup(Group);
+pub struct ParenthesisizedGroup(pub Group);
 /// Extacts a [`Group`] enclosed in brackets `[]`.
-pub struct BracketedGroup(Group);
+pub struct BracketedGroup(pub Group);
 /// Extacts a [`Group`] enclosed in curly braces `{}`.
-pub struct CurlyBracedGroup(Group);
+pub struct CurlyBracedGroup(pub Group);
 
 macro_rules! impl_groups {
     ($($name: ident, $delim: ident, $lit: literal);*) => {
