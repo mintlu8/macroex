@@ -10,18 +10,19 @@ An extractor based low level macro parsing crate
 that provides high level parsing support through derive macros.
 """
 keywords = ["macros", "deserialize"]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 
 [features]
-default = ["derive"]
+default = ["derive", "quote"]
 derive = ["macroex-derive"]
 
 [dependencies]
 litrs = "^0.4"
 proc-macro2 = "^1"
 thiserror = "^1"
+quote = { version = "^1", optional = true }
 macroex-derive = { path = "../derive", version = "^0.1", optional = true }
 
 [dev-dependencies]

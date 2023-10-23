@@ -284,6 +284,13 @@ pub use collections::*;
 pub use validators::*;
 pub use either::*;
 
+#[cfg(feature="quote")]
+mod totokens;
+#[cfg(feature="quote")]
+pub use totokens::*;
+#[cfg(feature="quote")]
+pub use quote;
+
 /// Re-export of [`proc_macro2`]
 pub use proc_macro2;
 
@@ -295,19 +302,27 @@ pub trait FromMacro: Sized {
 
     /// Hint to [`All`] and similar extractors to disable length validation.
     /// 
-    /// Primarily used for items derived directly from [`TokenStream`]. 
-    /// Do not use this unless absolutely necessary.
+    /// By default only implemented on [`TokenStream`], [`Iter`] and [`Stringify`] 
+    /// for their special use cases.
     const PREFER_MANY: bool = false;
     /// This will be called if there is only one item
     fn from_one(tt: TokenTree) -> Result<Self, Error>;
     /// This will be called if there is more than one item.
     /// 
     /// The `empty` case, in principle, should be handled by extractors like [`All`].
-    #[inline(always)]
     #[allow(unused)]
     fn from_many(tokens: TokenStream) -> Result<Self, Error> {
         abort!(tokens => ExpectOne)
     }
+
+    /// Look ahead and determine parsability.
+    /// 
+    /// This should be used to avoid unnecessary calls to
+    /// `TokenStream::into_iter()` or `IntoIter::clone()`.
+    /// 
+    /// False positives are allowed。
+    #[allow(unused)]
+    fn peek(tt: &TokenTree) -> bool { true }
 
     /// Internal use only.
     #[doc(hidden)]

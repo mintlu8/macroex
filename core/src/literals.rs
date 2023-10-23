@@ -93,7 +93,7 @@ impl FromMacro for String {
 /// Byte(value) = quote!(b'@').into_iter().extract()?;
 /// assert_eq!(value, b'@');
 /// # Ok(())}
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Byte(pub u8);
 
 impl FromMacro for Byte {
@@ -109,7 +109,6 @@ impl FromMacro for Byte {
     }
 }
 
-
 /// Specialized extractor for [`Vec<u8>`] that additionally accepts a byte string literal.
 /// # Examples
 /// ```
@@ -122,7 +121,7 @@ impl FromMacro for Byte {
 /// Bytes(value) = quote!(b"456").into_iter().extract()?;
 /// assert_eq!(value, b"456");
 /// # Ok(())}
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct Bytes(pub Vec<u8>);
 
 impl FromMacro for Bytes {
@@ -160,7 +159,7 @@ get_float!(f32, f64);
 /// All(Number(value)) = quote!(-1.0).into_iter().extract()?;
 /// assert_eq!(value, -1.0);
 /// # Ok(())}
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Number<T>(pub T);
 
 impl FromMacro for Number<f32> {

@@ -1,8 +1,8 @@
 use std::{collections::{HashSet, BTreeSet, VecDeque}, hash::Hash, iter::{repeat, once}, fmt::Debug};
 
-use proc_macro2::{TokenTree, TokenStream, Delimiter, Group, Punct, Spacing};
+use proc_macro2::{TokenTree, TokenStream, Delimiter, Group, Punct, Spacing, Literal};
 
-use crate::{FromMacro, CommaExtractor, Error, Bracketed, EndOfStream, StreamExtract, LitSome, Parenthesisized, All, abort, Number, Iter, SemiColonExtractor};
+use crate::{FromMacro, CommaExtractor, Error, Bracketed, EndOfStream, StreamExtract, LitSome, Parenthesisized, All, abort, Iter, SemiColonExtractor};
 
 /// [`Optional`] provides an option type extractor.
 /// 
@@ -11,7 +11,7 @@ use crate::{FromMacro, CommaExtractor, Error, Bracketed, EndOfStream, StreamExtr
 /// 
 /// * `from_one`: `None` matches the None case, everything else matches the Some case
 /// * `from_many`: `Some ()`  matches everything in (), everything else matches all.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 struct Optional<T>(pub Option<T>);
 
 impl<T: FromMacro> FromMacro for Optional<T> {
@@ -41,6 +41,7 @@ impl<T: FromMacro> FromMacro for Optional<T> {
 }
 
 /// Extractor that rewrites `(..)` to `[..]`
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TupleList<T>(pub T);
 
 impl<T> FromMacro for TupleList<T> where T: FromMacro {
@@ -69,7 +70,7 @@ impl<T> IntoIterator for TupleList<T> where T: IntoIterator {
 }
 
 
-impl<T: FromMacro + Debug, const N: usize> FromMacro for [T; N] {
+impl<T: FromMacro, const N: usize> FromMacro for [T; N] {
     fn from_one(tt: TokenTree) -> Result<Self, Error> {
         let span = tt.span();
         let mut result = Vec::new();
@@ -91,10 +92,9 @@ impl<T: FromMacro + Debug, const N: usize> FromMacro for [T; N] {
 }
 
 
-/// An extractor that extracts both ints and floats 
-/// into a list of floats.
+/// Rewrites integer literals in a group into floating point literals.
 /// 
-/// Equivalent to `Vec<Number<T>>` but more ergonomic.
+/// This is more flexable and ergonomic than `Vec<Number<T>>`.
 /// 
 /// # Example
 /// ```
@@ -106,7 +106,7 @@ impl<T: FromMacro + Debug, const N: usize> FromMacro for [T; N] {
 /// # Ok(())}
 /// ```
 /// See also [`Number`].
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NumberList<T>(pub T);
 
 impl<T> IntoIterator for NumberList<T> where T: IntoIterator {
@@ -118,6 +118,37 @@ impl<T> IntoIterator for NumberList<T> where T: IntoIterator {
         self.0.into_iter()
     }
 }
+
+impl<T> FromMacro for NumberList<T> where T: FromMacro {
+    fn from_one(tt: TokenTree) -> Result<Self, Error> {
+        let span = tt.span();
+        match tt {
+            TokenTree::Group(g) => {
+                let mut group = TokenTree::Group(
+                    Group::new(
+                        g.delimiter(), 
+                        g.stream().into_iter().map(|x| match x {
+                            TokenTree::Literal(lit) => {
+                                if let Ok(lit) = litrs::IntegerLit::try_from(&lit) {
+                                    TokenTree::Literal(Literal::f64_unsuffixed(
+                                        lit.value::<i64>().map(|x| x as f64).unwrap_or(f64::NAN)
+                                    ))
+                                } else {
+                                    TokenTree::Literal(lit)
+                                }
+                            },
+                            tt => tt
+                        }).collect(),
+                    )
+                );
+                group.set_span(span);
+                Ok(Self(T::from_one(group)?))
+            },
+            tt => abort!(span, ExpectTokenTree("[..]", tt)),
+        }
+    }
+}
+
 
 macro_rules! impl_lists {
     ($($ty: ident, $method: ident $(,$bounds: ident)*);*) => {
@@ -137,49 +168,11 @@ impl<T: FromMacro $(+ $bounds)*> FromMacro for $ty<T> {
             }
         }
     }
-}
-    
-impl<T: FromMacro $(+ $bounds)*> FromMacro for NumberList<$ty<T>> where Number<T>: FromMacro $(+ $bounds)*{
-    fn from_one(tt: TokenTree) -> Result<Self, Error> {
-        let mut result = $ty::new();        
-        let Bracketed(Iter(mut iter)) = Bracketed::from_one(tt)?;
-        loop {
-            match iter.extract() {
-                Ok(CommaExtractor(Number(item))) => drop(result.$method(item)),
-                Err(e) if e.is_end_of_stream() => {
-                    iter.extract::<EndOfStream>()?;
-                    return Ok(Self(result))
-                },
-                Err(e) => return Err(e)
-            }
-        }
-    }
 })*
     };
 }
 
 impl_lists!(Vec, push; VecDeque, push_back; HashSet, insert, Hash, Eq; BTreeSet, insert, Ord);
-
-impl<T, const N: usize> FromMacro for NumberList<[T; N]> where Number<T>: FromMacro {
-    fn from_one(tt: TokenTree) -> Result<Self, Error> {
-        let span = tt.span();
-        let mut result = Vec::new();        
-        let Bracketed(Iter(mut iter)) = Bracketed::from_one(tt)?;
-        loop {
-            match iter.extract() {
-                Ok(CommaExtractor(Number(item))) => result.push(item),
-                Err(e) if e.is_end_of_stream() => {
-                    iter.extract::<EndOfStream>()?;
-                    match result.try_into() {
-                        Ok(r) => return Ok(Self(r)),
-                        Err(_) => abort!(span, LengthMismatch)
-                    }
-                },
-                Err(e) => return Err(e)
-            }
-        }
-    }
-}
 
 /// If input `v` is not a Group in [`Delimiter::Bracket`],
 /// rewrite it as `[v, v, .., v]` (N times)
@@ -195,6 +188,7 @@ impl<T, const N: usize> FromMacro for NumberList<[T; N]> where Number<T>: FromMa
 /// assert_eq!(arr, [3, 3, 3, 3]);
 /// # Ok(())}
 /// ```
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Repeat<T, const N: usize>(pub T);
 
 impl<T, const N: usize> FromMacro for Repeat<T, N> where T: FromMacro{
@@ -232,6 +226,7 @@ impl<T, const N: usize> FromMacro for Repeat<T, N> where T: FromMacro{
 /// assert_eq!(len, 4);
 /// # Ok(())}
 /// ```
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ArrayRepeat<T>(pub T, pub usize);
 
 impl<T: FromMacro> FromMacro for ArrayRepeat<T> {
@@ -256,6 +251,7 @@ impl<T: FromMacro> FromMacro for ArrayRepeat<T> {
 /// assert_eq!(value, "[4 , 4 , 4 ,]");
 /// # Ok(())}
 /// ```
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Splat<T>(pub T);
 
 impl<T: FromMacro> FromMacro for Splat<T> {

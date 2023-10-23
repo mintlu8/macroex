@@ -64,9 +64,13 @@ macro_rules! impl_choice {
 impl<$($fields),*> FromMacro for $name<$($fields),*> where $($fields: FromMacro),* {
     fn from_one(tt: proc_macro2::TokenTree) -> Result<Self, crate::Error> {
         let span = tt.span();
-        $(if let Ok(x) = $fields::from_one(tt.clone()) {
-            return Ok(Self::$fields(x));
-        })*
+        $(
+            if $fields::peek(&tt) {
+                if let Ok(x) = $fields::from_one(tt.clone()) {
+                    return Ok(Self::$fields(x));
+                }
+            }
+        )*
         abort!(span, FailedToMatch(tt.to_string()))
     }
 
@@ -77,6 +81,13 @@ impl<$($fields),*> FromMacro for $name<$($fields),*> where $($fields: FromMacro)
         abort!(call_site, FailedToMatch(tokens.to_string()))
     }
 }
+
+impl<$($fields),*> Default for $name<$($fields),*> where A: Default, $($fields: FromMacro),*{
+    fn default() -> Self {
+        Self::A(A::default())
+    }
+}
+
     };
 }
 
@@ -84,21 +95,3 @@ impl_choice!(Either {A, B});
 impl_choice!(Either3 {A, B, C});
 impl_choice!(Either4 {A, B, C, D});
 
-
-impl<A: FromMacro, B: FromMacro> Default for Either<A, B> where A: Default{
-    fn default() -> Self {
-        Self::A(A::default())
-    }
-}
-
-impl<A: FromMacro, B: FromMacro, C: FromMacro> Default for Either3<A, B, C> where A: Default{
-    fn default() -> Self {
-        Self::A(A::default())
-    }
-}
-
-impl<A: FromMacro, B: FromMacro, C: FromMacro, D: FromMacro> Default for Either4<A, B, C, D> where A: Default{
-    fn default() -> Self {
-        Self::A(A::default())
-    }
-}

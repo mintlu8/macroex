@@ -46,6 +46,15 @@ macro_rules! impl_groups {
                     tt => abort!(tt.span(), ExpectTokenTree("TokenTree::Group", tt))
                 }
             }
+
+            fn peek(tt: &TokenTree) -> bool {
+                match tt {
+                    TokenTree::Group(group) if group.delimiter() ==proc_macro2::Delimiter::$delim => {
+                        true
+                    },
+                    _ => false,
+                }
+            }
         })*
     };
 }
@@ -75,6 +84,15 @@ macro_rules! impl_group_extract {
                         }
                     },
                     tt => abort!(tt.span(), ExpectTokenTree("TokenTree::Group", tt))
+                }
+            }
+
+            fn peek(tt: &TokenTree) -> bool {
+                match tt {
+                    TokenTree::Group(group) if group.delimiter() ==proc_macro2::Delimiter::$delim => {
+                        true
+                    },
+                    _ => false,
                 }
             }
         })*
