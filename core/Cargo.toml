@@ -10,7 +10,7 @@ An extractor based low level macro parsing crate
 that provides high level parsing support through derive macros.
 """
 keywords = ["macros", "deserialize"]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 
 

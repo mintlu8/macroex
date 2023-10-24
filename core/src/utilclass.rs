@@ -59,8 +59,11 @@ macro_rules! impl_groups {
     };
 }
 
-impl_groups!(ParenthesisizedGroup, Parenthesis, "()"; BracketedGroup, Bracket, "[]"; CurlyBracedGroup, Brace, "{}");
-
+impl_groups!(
+    ParenthesisizedGroup, Parenthesis, "()"; 
+    BracketedGroup, Bracket, "[]"; 
+    CurlyBracedGroup, Brace, "{}"
+);
 
 
 /// Extracts a [`TokenStream`] enclosed in parenthesis `()`.
@@ -99,7 +102,58 @@ macro_rules! impl_group_extract {
     };
 }
 
-impl_group_extract!(Parenthesisized, Parenthesis, "(..)"; Bracketed, Bracket, "[..]"; CurlyBraced, Brace, "{..}");
+impl_group_extract!(
+    Parenthesisized, Parenthesis, "(..)"; 
+    Bracketed, Bracket, "[..]"; 
+    CurlyBraced, Brace, "{..}"
+);
+
+
+/// Extacts anything that's not in a [`Group`] enclosed in parenthesis `()`.
+/// 
+/// Useful for syntax consistancy when using with [`Either`]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct NotParenthesisized<T>(pub T);
+/// Extacts anything that's not in a [`Group`] enclosed in brackets `[]`.
+/// 
+/// Useful for syntax consistancy when using with [`Either`]
+pub struct NotBracketed<T>(pub T);
+/// Extacts anything that's not in a [`Group`] enclosed in curly braces `{}`.
+/// 
+/// Useful for syntax consistancy when using with [`Either`]
+pub struct NotCurlyBraced<T>(pub T);
+
+macro_rules! impl_not_group_extract {
+    ($($name: ident, $delim: ident, $lit: literal);*) => {
+        $(impl<T: FromMacro> FromMacro for $name<T> {
+            fn from_one(tt: TokenTree) -> Result<Self, Error> {
+                match tt {
+                    TokenTree::Group(group)
+                        if group.delimiter() == proc_macro2::Delimiter::$delim => {
+                        abort!(group.span(), ExpectTokenTree($lit, TokenTree::Group(group)))
+                    },
+                    tt => Ok(Self(T::from_one(tt)?))
+                }
+            }
+
+            fn peek(tt: &TokenTree) -> bool {
+                match tt {
+                    TokenTree::Group(group) if group.delimiter() == proc_macro2::Delimiter::$delim => {
+                        false
+                    },
+                    _ => true,
+                }
+            }
+        })*
+    };
+}
+
+impl_not_group_extract!(
+    NotParenthesisized, Parenthesis, "anything but (..)"; 
+    NotBracketed, Bracket, "anything but [..]"; 
+    NotCurlyBraced, Brace, "anything but {..}"
+);
+
 
 /// Extracts a string from an ident.
 /// # Example

@@ -30,6 +30,7 @@ raw!(
 no_bounds!(
     Number, NumberList, Splat, ArrayRepeat, TupleList,
     Parenthesisized, Bracketed, CurlyBraced,
+    NotParenthesisized, NotBracketed, NotCurlyBraced,
 );
 
 
