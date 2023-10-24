@@ -294,3 +294,30 @@ impl FromMacro for proc_macro2::Punct {
     }
 }
 
+/// Extracts a Hex number literal and its string representation.
+/// 
+/// # Examples
+/// ```
+/// # use macroex::*;
+/// # use quote::quote;
+/// # fn main() -> Result<(), Error> {
+/// let HexNumber(num, str) = quote!(0xFF).into_iter().extract()?;
+/// assert_eq!(num, 0xFF);
+/// assert_eq!(str, "FF");
+/// # Ok(())}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct HexNumber(pub u64, pub String);
+
+impl FromMacro for HexNumber {
+    fn from_one(tt: TokenTree) -> Result<Self, Error> {
+        if let Ok(lit) =litrs::IntegerLit::try_from(&tt) {
+            if let Some(val) = lit.value() {
+                let s = tt.to_string();
+                if s.starts_with("0x") || s.starts_with("0X") {
+                    return Ok(Self(val, s[2..].to_owned()));
+                }
+            }
+        }
+        abort!(tt.span(), ExpectTokenTree("hex literal", tt));
+    }
+}
