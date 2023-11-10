@@ -2,16 +2,6 @@ use proc_macro2::{TokenTree, TokenStream};
 
 use crate::{FromMacro, abort, Error};
 
-
-/// Matches one of two [`FromMacro`] implementors sequentially.
-/// 
-/// Note the input will be cloned for each branch, which might not be optimal.
-#[derive(Debug)]
-pub enum Either<A: FromMacro, B: FromMacro>{
-    A(A),
-    B(B),
-}
-
 /// Matches one of two [`FromMacro`] implementors by count.
 ///
 /// * Uses [`One`](OneOrMany::One) if input is a [`TokenTree`]
@@ -36,30 +26,17 @@ impl<TOne, TMany> FromMacro for OneOrMany<TOne, TMany> where TOne: FromMacro, TM
 pub type EitherStream = OneOrMany<TokenTree, TokenStream>;
 
 
-/// Matches one of three [`FromMacro`] implementors sequentially.
-/// 
-/// Note the input will be cloned for each branch, which might not be optimal.
-#[derive(Debug)]
-pub enum Either3<A: FromMacro, B: FromMacro, C: FromMacro>{
-    A(A),
-    B(B),
-    C(C),
-}
-
-/// Matches one of four [`FromMacro`] implementors sequentially.
-/// 
-/// Note the input will be cloned for each branch, which might not be optimal.
-#[derive(Debug)]
-pub enum Either4<A: FromMacro, B: FromMacro, C: FromMacro, D: FromMacro>{
-    A(A),
-    B(B),
-    C(C),
-    D(D),
-}
-
 
 macro_rules! impl_choice {
     ($name: ident {$($fields: ident),*}) => {
+
+/// Matches one of many [`FromMacro`] implementors sequentially.
+/// 
+/// Note the input will be cloned for each branch, which might not be optimal.
+#[derive(Debug)]
+pub enum $name<$($fields: FromMacro),*>{
+    $($fields($fields)),*
+}
         
 impl<$($fields),*> FromMacro for $name<$($fields),*> where $($fields: FromMacro),* {
     fn from_one(tt: proc_macro2::TokenTree) -> Result<Self, crate::Error> {
@@ -88,10 +65,25 @@ impl<$($fields),*> Default for $name<$($fields),*> where A: Default, $($fields: 
     }
 }
 
+
+#[cfg(feature="quote")]
+impl<$($fields),*> quote::ToTokens for $name<$($fields),*>where $($fields: FromMacro + quote::ToTokens),*{
+    #[allow(nonstandard_style)]
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        match self {
+            $($name::$fields($fields) => $fields.to_tokens(tokens)),*
+        }
+    }
+}
     };
 }
 
 impl_choice!(Either {A, B});
 impl_choice!(Either3 {A, B, C});
 impl_choice!(Either4 {A, B, C, D});
+impl_choice!(Either5 {A, B, C, D, E});
+impl_choice!(Either6 {A, B, C, D, E, F});
+impl_choice!(Either7 {A, B, C, D, E, F, G});
+impl_choice!(Either8 {A, B, C, D, E, F, G, H});
+impl_choice!(Either9 {A, B, C, D, E, F, G, H, I});
 

@@ -18,43 +18,6 @@ impl quote::ToTokens for Bytes {
     }
 }
 
-impl<A, B> quote::ToTokens for Either<A, B> where A: FromMacro + ToTokens, B: FromMacro + ToTokens{
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self {
-            Either::A(a) => a.to_tokens(tokens),
-            Either::B(b) => b.to_tokens(tokens),
-        }
-    }
-}
-
-impl<A, B, C> quote::ToTokens for Either3<A, B, C> where 
-            A: FromMacro + ToTokens, 
-            B: FromMacro + ToTokens, 
-            C: FromMacro + ToTokens,{
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self {
-            Either3::A(a) => a.to_tokens(tokens),
-            Either3::B(b) => b.to_tokens(tokens),
-            Either3::C(c) => c.to_tokens(tokens),
-        }
-    }
-}
-
-impl<A, B, C, D> quote::ToTokens for Either4<A, B, C, D> where 
-            A: FromMacro + ToTokens, 
-            B: FromMacro + ToTokens, 
-            C: FromMacro + ToTokens, 
-            D: FromMacro + ToTokens,{
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self {
-            Either4::A(a) => a.to_tokens(tokens),
-            Either4::B(b) => b.to_tokens(tokens),
-            Either4::C(c) => c.to_tokens(tokens),
-            Either4::D(d) => d.to_tokens(tokens),
-        }
-    }
-}
-
 /// Format a fixed sized array into a function call.
 /// 
 /// `format_str` syntax: `path::to::fn($)` or `fn(1,2,$,3)`
