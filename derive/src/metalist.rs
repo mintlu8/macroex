@@ -173,11 +173,11 @@ pub fn format_struct(name: Ident, generics: Generics, fields: Vec<TokenStream>) 
     quote! {
 #[automatically_derived]
 const _: () = {
-    use ::macroex::{FromMacro, MetaMap, IdentString, EitherStream, NamedStructExtractor, bail};
+    use ::macroex::{FromMacro, MetaMap, IdentString, EitherStream, NamedStructExtractor, Parenthesized, bail};
     use ::macroex::proc_macro2::{TokenTree, TokenStream, Span};
     impl #impl_generics FromMacro for #name #ty_generics #where_clause {
         fn from_one(tt: TokenTree) -> Result<Self, macroex::Error> {
-            let Parenthesisized(span) = Parenthesisized::from_one(tt)?;
+            let Parenthesized(span) = Parenthesized::from_one(tt)?;
             Self::from_many(span)
         }
         fn from_many(tokens: proc_macro2::TokenStream) -> Result<Self, macroex::Error> {

@@ -24,13 +24,13 @@ macro_rules! no_bounds {
 }
 
 raw!(
-    IdentString, ParenthesisizedGroup, BracketedGroup, CurlyBracedGroup,
+    IdentString, ParenthesizedGroup, BracketedGroup, CurlyBracedGroup,
 );
 
 no_bounds!(
     Number, NumberList, Splat, ArrayRepeat, TupleList,
-    Parenthesisized, Bracketed, CurlyBraced,
-    NotParenthesisized, NotBracketed, NotCurlyBraced,
+    Parenthesized, Bracketed, CurlyBraced,
+    NotParenthesized, NotBracketed, NotCurlyBraced,
 );
 
 

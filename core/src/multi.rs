@@ -1,6 +1,6 @@
 use proc_macro2::TokenTree;
 
-use crate::{Extractor, FromMacro, Iter, Parenthesisized, StreamExtract, CommaExtractor, EndOfStream};
+use crate::{Extractor, FromMacro, Iter, Parenthesized, StreamExtract, CommaExtractor, EndOfStream};
 
 /// Extracts multiple items sequentiallly.
 /// # Example:
@@ -40,7 +40,7 @@ macro_rules! tuple_impl {
     ($first: ident $(,$thing: ident)* $(,)?) => {
         impl<$first, $($thing),*> FromMacro for ($first, $($thing),*) where $first: FromMacro, $($thing: FromMacro),* {
             fn from_one(tt: TokenTree) -> Result<Self, crate::Error> {
-                let Parenthesisized(Iter(mut iter)) = Parenthesisized::from_one(tt)?;
+                let Parenthesized(Iter(mut iter)) = Parenthesized::from_one(tt)?;
                 let result = (
                     {
                         let CommaExtractor(x) = iter.extract::<CommaExtractor<$first>>()?;

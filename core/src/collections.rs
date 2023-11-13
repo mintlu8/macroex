@@ -2,7 +2,7 @@ use std::{collections::{HashSet, BTreeSet, VecDeque}, hash::Hash, iter::{repeat,
 
 use proc_macro2::{TokenTree, TokenStream, Delimiter, Group, Punct, Spacing, Literal};
 
-use crate::{FromMacro, CommaExtractor, Error, Bracketed, EndOfStream, StreamExtract, LitSome, Parenthesisized, All, abort, Iter, SemiColonExtractor};
+use crate::{FromMacro, CommaExtractor, Error, Bracketed, EndOfStream, StreamExtract, LitSome, Parenthesized, All, abort, Iter, SemiColonExtractor};
 
 /// [`Optional`] provides an option type extractor.
 /// 
@@ -26,7 +26,7 @@ impl<T: FromMacro> FromMacro for Optional<T> {
         let mut iter = tokens.clone().into_iter();
         let mut syn_some = || -> Result<TokenStream, Error>{
             let LitSome = iter.extract()?;
-            let Parenthesisized(group) = iter.extract()?;
+            let Parenthesized(group) = iter.extract()?;
             let EndOfStream = iter.extract()?;
             Ok(group)
         };

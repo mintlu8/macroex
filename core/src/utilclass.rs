@@ -25,7 +25,7 @@ impl<T> FromMacro for Spanned<T> where T: FromMacro{
 }
 
 /// Extacts a [`Group`] enclosed in parenthesis `()`.
-pub struct ParenthesisizedGroup(pub Group);
+pub struct ParenthesizedGroup(pub Group);
 /// Extacts a [`Group`] enclosed in brackets `[]`.
 pub struct BracketedGroup(pub Group);
 /// Extacts a [`Group`] enclosed in curly braces `{}`.
@@ -60,14 +60,14 @@ macro_rules! impl_groups {
 }
 
 impl_groups!(
-    ParenthesisizedGroup, Parenthesis, "()"; 
+    ParenthesizedGroup, Parenthesis, "()"; 
     BracketedGroup, Bracket, "[]"; 
     CurlyBracedGroup, Brace, "{}"
 );
 
 
 /// Extracts a [`TokenStream`] enclosed in parenthesis `()`.
-pub struct Parenthesisized<T>(pub T);
+pub struct Parenthesized<T>(pub T);
 /// Extracts a [`TokenStream`] enclosed in brackets `[]`.
 pub struct Bracketed<T>(pub T);
 /// Extracts a [`TokenStream`] enclosed in curly braces `{}`.
@@ -103,7 +103,7 @@ macro_rules! impl_group_extract {
 }
 
 impl_group_extract!(
-    Parenthesisized, Parenthesis, "(..)"; 
+    Parenthesized, Parenthesis, "(..)"; 
     Bracketed, Bracket, "[..]"; 
     CurlyBraced, Brace, "{..}"
 );
@@ -113,7 +113,7 @@ impl_group_extract!(
 /// 
 /// Useful for syntax consistancy when using with [`Either`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct NotParenthesisized<T>(pub T);
+pub struct NotParenthesized<T>(pub T);
 /// Extacts anything that's not in a [`Group`] enclosed in brackets `[]`.
 /// 
 /// Useful for syntax consistancy when using with [`Either`]
@@ -149,7 +149,7 @@ macro_rules! impl_not_group_extract {
 }
 
 impl_not_group_extract!(
-    NotParenthesisized, Parenthesis, "anything but (..)"; 
+    NotParenthesized, Parenthesis, "anything but (..)"; 
     NotBracketed, Bracket, "anything but [..]"; 
     NotCurlyBraced, Brace, "anything but {..}"
 );
@@ -271,7 +271,7 @@ impl FromMacro for TupleStructExtractor {
     fn from_many(tokens: proc_macro2::TokenStream) -> Result<Self, Error> {
         let mut iter = tokens.into_iter();
         let ident = iter.extract()?;
-        let ParenthesisizedGroup(group) = iter.extract()?;
+        let ParenthesizedGroup(group) = iter.extract()?;
         iter.extract::<EndOfStream>()?;
         Ok(TupleStructExtractor(ident, group))
     }
@@ -308,7 +308,7 @@ impl FromMacro for StructExtractor {
         let mut iter = tokens.into_iter();
         let ident = iter.extract()?;
         let group = match iter.extract()? {
-            Either::A(ParenthesisizedGroup(g)) => g,
+            Either::A(ParenthesizedGroup(g)) => g,
             Either::B(CurlyBracedGroup(g)) => g,
         };
         iter.extract::<EndOfStream>()?;

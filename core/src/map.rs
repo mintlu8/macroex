@@ -2,7 +2,7 @@ use std::{collections::{HashMap, BTreeMap}, hash::Hash, borrow::Borrow};
 
 use proc_macro2::TokenTree;
 
-use crate::{FromMacro, Error, CurlyBraced, CommaExtractor, Field, EndOfStream, StreamExtract, Iter, Parenthesisized, Meta, EitherStream, IdentString};
+use crate::{FromMacro, Error, CurlyBraced, CommaExtractor, Field, EndOfStream, StreamExtract, Iter, Parenthesized, Meta, EitherStream, IdentString};
 
 /// A map used by [`FromMacro`](::macroex_derive::FromMacro).
 /// 
@@ -109,7 +109,7 @@ impl<A, B> FromMacro for FieldMap<A, B> where A: FromMacro + Hash + Eq, B: FromM
 
 impl FromMacro for MetaMap {
     fn from_one(tt: TokenTree) -> Result<Self, Error> {
-        let Parenthesisized(tokens) = Parenthesisized::from_one(tt)?;
+        let Parenthesized(tokens) = Parenthesized::from_one(tt)?;
         Self::from_many(tokens)
     }
 
